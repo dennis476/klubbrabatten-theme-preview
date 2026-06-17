@@ -108,6 +108,16 @@ class _ThemedHome extends StatelessWidget {
           ],
           stops: const [0.0, 0.26, 1.0],
         ),
+        // Club crest as a faint background watermark (matches home_page.dart).
+        image: (logoUrl != null && logoUrl!.isNotEmpty)
+            ? DecorationImage(
+                image: NetworkImage(logoUrl!),
+                alignment: const Alignment(1.15, -0.82),
+                scale: 1.7,
+                fit: BoxFit.none,
+                opacity: 0.16,
+              )
+            : null,
       ),
       child: Column(children: [
         Expanded(
