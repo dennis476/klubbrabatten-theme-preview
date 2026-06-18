@@ -2,20 +2,24 @@
 // Embedded by the admin (Lovable) via an <iframe>; the accent colour + logo +
 // name come from the URL query string:
 //   ?primary=%23F2C200&logo=<logo-url>&name=Vaksala%20SK&city=Solna
-// Faithful replica of the real Home v2 (home_page_content order: chip sections
-// → Stötta-kort → Ludde-kort → Nyheter), using the SAME assets (KLUBBRABATTEN
-// logo, 3D-brevlåda, 3D category icons, nav SVGs) + the same dark theme tokens.
+//
+// Faithful replica of the REAL Home v2 (verified against home_page.dart /
+// home_page_content.dart / home_offers_chips_section.dart / chip_offer_card.dart
+// / user_support_seller_widget.dart / ludde_card.dart), rendered in the dark
+// föreningstema. Real order: HomeHeader → search → CHIP SECTION (pill selector +
+// VERTICAL list of 4 offer rows) → category rail → Stötta-kort → Ludde-kort →
+// Nyheter. Same dark tokens + assets as the app.
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 void main() => runApp(const ClubThemePreviewApp());
 
-// ── Fixed dark base tokens (must match lib/globals/club_theme.dart) ──────────
+// ── Dark base tokens (match lib/globals/club_theme.dart) ─────────────────────
 const Color _bgTop = Color(0xFF15161A);
 const Color _bgBottom = Color(0xFF0D0E11);
 const Color _surface = Color(0xFF1C1D21);
 const Color _surfaceText = Color(0xFFFFFFFF);
-const Color _surfaceSubtext = Color(0xFF9EA8B7);
+const Color _surfaceSub = Color(0xFF9EA8B7);
 const Color _orange = Color(0xFFF27B36);
 const String _font = 'DM Sans';
 
@@ -27,12 +31,11 @@ Color _parseHex(String? hex) {
   return v == null ? const Color(0xFF2D7BE0) : Color(0xFF000000 | v);
 }
 
-Color _onColor(Color primary) =>
-    primary.computeLuminance() > 0.5 ? const Color(0xFF1A1A1E) : Colors.white;
+Color _onColor(Color p) =>
+    p.computeLuminance() > 0.5 ? const Color(0xFF1A1A1E) : Colors.white;
 
 class ClubThemePreviewApp extends StatelessWidget {
   const ClubThemePreviewApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     final q = Uri.base.queryParameters;
@@ -42,16 +45,14 @@ class ClubThemePreviewApp extends StatelessWidget {
         ? 'Din förening'
         : q['name']!.trim();
     final city = q['city'];
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: _font),
       home: Scaffold(
         backgroundColor: const Color(0xFFE9ECF1),
         body: Center(
-          child: _PhoneFrame(
-            child: _ThemedHome(
-                primary: primary, logoUrl: logo, name: name, city: city),
+          child: _Phone(
+            child: _Home(primary: primary, logoUrl: logo, name: name, city: city),
           ),
         ),
       ),
@@ -59,8 +60,8 @@ class ClubThemePreviewApp extends StatelessWidget {
   }
 }
 
-class _PhoneFrame extends StatelessWidget {
-  const _PhoneFrame({required this.child});
+class _Phone extends StatelessWidget {
+  const _Phone({required this.child});
   final Widget child;
   @override
   Widget build(BuildContext context) {
@@ -77,14 +78,13 @@ class _PhoneFrame extends StatelessWidget {
               offset: const Offset(0, 20)),
         ],
       ),
-      child: ClipRRect(
-          borderRadius: BorderRadius.circular(34), child: child),
+      child: ClipRRect(borderRadius: BorderRadius.circular(34), child: child),
     );
   }
 }
 
-class _ThemedHome extends StatelessWidget {
-  const _ThemedHome(
+class _Home extends StatelessWidget {
+  const _Home(
       {required this.primary,
       required this.logoUrl,
       required this.name,
@@ -96,7 +96,7 @@ class _ThemedHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onPrimary = _onColor(primary);
+    final onP = _onColor(primary);
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -109,16 +109,13 @@ class _ThemedHome extends StatelessWidget {
           ],
           stops: const [0.0, 0.26, 1.0],
         ),
-        // Club crest as a large, faint, full-resolution background watermark
-        // (upper, slightly right-of-centre). Matches home_page.dart.
         image: (logoUrl != null && logoUrl!.isNotEmpty)
             ? DecorationImage(
                 image: NetworkImage(logoUrl!),
                 alignment: const Alignment(0.55, -0.62),
                 scale: 1.55,
                 fit: BoxFit.none,
-                opacity: 0.15,
-              )
+                opacity: 0.15)
             : null,
       ),
       child: Column(children: [
@@ -126,22 +123,22 @@ class _ThemedHome extends StatelessWidget {
           child: ListView(padding: EdgeInsets.zero, children: [
             const SizedBox(height: 14),
             _statusBar(),
-            const SizedBox(height: 10),
-            _header(),
-            const SizedBox(height: 8),
-            _location(),
             const SizedBox(height: 12),
-            _search(),
-            const SizedBox(height: 16),
+            _headerRow(),
+            const SizedBox(height: 8),
+            _locationRow(),
+            const SizedBox(height: 12),
+            _searchBar(),
+            const SizedBox(height: 18),
+            _chipSection(onP),
+            const SizedBox(height: 8),
             _categoryRail(),
-            const SizedBox(height: 18),
-            _chipSection(),
-            const SizedBox(height: 18),
-            _stottaCard(onPrimary),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
+            _stottaCard(onP),
+            const SizedBox(height: 12),
             _luddeCard(),
             const SizedBox(height: 20),
-            _sectionHeader('Nyheter'),
+            _sectionTitle('Nyheter'),
             const SizedBox(height: 8),
             _newsCard(),
             const SizedBox(height: 24),
@@ -157,9 +154,7 @@ class _ThemedHome extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text('09:41',
               style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15)),
+                  color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
           Row(children: [
             Icon(Icons.signal_cellular_alt, color: Colors.white, size: 16),
             SizedBox(width: 5),
@@ -170,30 +165,28 @@ class _ThemedHome extends StatelessWidget {
         ]),
       );
 
-  Widget _header() => Padding(
+  // HomeHeader top row: logo (h34) + 48px glass notification (3D mailbox).
+  Widget _headerRow() => Padding(
         padding: const EdgeInsets.fromLTRB(22, 0, 20, 0),
         child: Row(children: [
-          // Real KLUBBRABATTEN logo (white-on-dark variant).
           Image.asset('assets/brand/header_logo_dark.webp',
-              height: 30, fit: BoxFit.contain, alignment: Alignment.centerLeft),
+              height: 34, fit: BoxFit.contain, alignment: Alignment.centerLeft),
           const Spacer(),
-          // Real 3D mailbox notification button (glass circle).
           Container(
-            width: 46,
-            height: 46,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF24262C),
+              color: Colors.white.withValues(alpha: 0.10),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
             ),
-            padding: const EdgeInsets.all(7),
-            child: Image.asset('assets/ic_notification_3d.png',
-                fit: BoxFit.contain),
+            padding: const EdgeInsets.all(8),
+            child: Image.asset('assets/ic_notification_3d.png', fit: BoxFit.contain),
           ),
         ]),
       );
 
-  Widget _location() => const Padding(
+  Widget _locationRow() => const Padding(
         padding: EdgeInsets.fromLTRB(22, 0, 20, 0),
         child: Row(children: [
           Icon(Icons.location_on, color: Color(0xFFC8CED8), size: 18),
@@ -203,29 +196,200 @@ class _ThemedHome extends StatelessWidget {
                   color: Color(0xFFC8CED8),
                   fontSize: 14.5,
                   fontWeight: FontWeight.w500)),
-          Icon(Icons.keyboard_arrow_down_rounded,
-              color: Color(0xFFC8CED8), size: 18),
+          Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFC8CED8), size: 18),
         ]),
       );
 
-  Widget _search() => Padding(
+  Widget _searchBar() => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
-          height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
               color: Colors.white, borderRadius: BorderRadius.circular(16)),
           child: const Row(children: [
-            Icon(Icons.search, color: Color(0xFF8A94A6), size: 22),
-            SizedBox(width: 10),
-            Text('Sök erbjudanden, butiker, kategorier…',
-                style: TextStyle(color: Color(0xFF8A94A6), fontSize: 14)),
+            Icon(Icons.search, color: Color(0xFF8A94A6), size: 20),
+            SizedBox(width: 12),
+            Text('Sök affärer',
+                style: TextStyle(
+                    color: Color(0xFF8A94A6),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500)),
           ]),
         ),
       );
 
+  // CHIP SECTION: pill selector (Flest inlösen / Trendar just nu / Nyheter) +
+  // a VERTICAL list of 4 offer rows (chip_offer_card). Dark-themed.
+  Widget _chipSection(Color onP) {
+    const pills = ['Flest inlösen', 'Trendar just nu', 'Nyheter'];
+    final offers = [
+      ['Stadium', 'Sport & träning', '25%', '1,5 km', '1 248'],
+      ['ICA Maxi', 'Mat & dryck', '15%', '1,2 km', '982'],
+      ['Pizza Hut', 'Restaurang', '30%', '0,8 km', '743'],
+      ['Apotek Hjärtat', 'Hälsa', '20%', '2,1 km', '511'],
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // pill bar
+      SizedBox(
+        height: 40,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: pills.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (_, i) {
+            final sel = i == 0;
+            return Container(
+              padding: const EdgeInsets.fromLTRB(14, 9, 16, 9),
+              decoration: BoxDecoration(
+                color: sel ? primary.withValues(alpha: 0.18) : _surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: sel
+                        ? primary.withValues(alpha: 0.55)
+                        : const Color(0xFF2E3036)),
+              ),
+              alignment: Alignment.center,
+              child: Text(pills[i],
+                  style: TextStyle(
+                      color: sel ? primary : _surfaceSub,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700)),
+            );
+          },
+        ),
+      ),
+      const SizedBox(height: 12),
+      // section header
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          const Text('Flest inlösen',
+              style: TextStyle(
+                  color: _surfaceText, fontSize: 17, fontWeight: FontWeight.w700)),
+          Row(children: [
+            Text('Visa alla',
+                style: TextStyle(
+                    color: primary, fontSize: 13, fontWeight: FontWeight.w600)),
+            Icon(Icons.chevron_right_rounded, color: primary, size: 18),
+          ]),
+        ]),
+      ),
+      const SizedBox(height: 10),
+      // VERTICAL list of 4 offer rows
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: [
+            for (final o in offers)
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                    color: _surface, borderRadius: BorderRadius.circular(18)),
+                child: Row(children: [
+                  // image + discount badge
+                  Stack(children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF2A2C33),
+                          borderRadius: BorderRadius.circular(14)),
+                      child: const Icon(Icons.local_offer,
+                          color: Color(0xFF565963), size: 22),
+                    ),
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 2),
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFF2655A), Color(0xFFD81F1F)]),
+                          borderRadius: BorderRadius.all(Radius.circular(7)),
+                        ),
+                        child: Text(o[2],
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 9.5)),
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(width: 12),
+                  // name + title + meta
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(o[0],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: _surfaceText,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14)),
+                          const SizedBox(height: 2),
+                          Text(o[1],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: _surfaceSub,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12.5)),
+                          const SizedBox(height: 4),
+                          Row(children: [
+                            const Icon(Icons.location_on_rounded,
+                                size: 12, color: _surfaceSub),
+                            const SizedBox(width: 2),
+                            Text(o[3],
+                                style: const TextStyle(
+                                    color: _surfaceSub,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w500)),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.fromLTRB(5, 2, 8, 2),
+                              decoration: BoxDecoration(
+                                  color: const Color(0xFF2A2D34),
+                                  borderRadius: BorderRadius.circular(999)),
+                              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                Icon(Icons.confirmation_number_outlined,
+                                    size: 12, color: _surfaceSub),
+                                const SizedBox(width: 4),
+                                Text(o[4],
+                                    style: const TextStyle(
+                                        color: Color(0xFFD7DCE5),
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600)),
+                              ]),
+                            ),
+                          ]),
+                        ]),
+                  ),
+                  const SizedBox(width: 8),
+                  // favorite heart
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFF26282F), shape: BoxShape.circle),
+                    child: const Icon(Icons.favorite_border,
+                        size: 18, color: _surfaceSub),
+                  ),
+                ]),
+              ),
+          ],
+        ),
+      ),
+    ]);
+  }
+
   Widget _categoryRail() {
-    // Real categories + order (DB sort_order) with the actual 3D Wolt icons.
     const cats = <List<String>>[
       ['Alla', 'alla'],
       ['Livsmedel', 'livsmedel'],
@@ -246,7 +410,7 @@ class _ThemedHome extends StatelessWidget {
         itemCount: cats.length,
         separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (_, i) {
-          final selected = i == 0;
+          final sel = i == 0;
           return SizedBox(
             width: 62,
             child: Column(children: [
@@ -258,7 +422,7 @@ class _ThemedHome extends StatelessWidget {
                   color: const Color(0xFFEDF1F6),
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: selected ? _orange : Colors.transparent, width: 2),
+                      color: sel ? _orange : Colors.transparent, width: 2),
                 ),
                 child: Image.asset('assets/cat/${cats[i][1]}.webp',
                     width: 40, height: 40),
@@ -269,9 +433,8 @@ class _ThemedHome extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                       fontSize: 10.5,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                      color:
-                          selected ? _orange : const Color(0xFFC8CED8))),
+                      fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
+                      color: sel ? _orange : const Color(0xFFC8CED8))),
             ]),
           );
         },
@@ -279,152 +442,76 @@ class _ThemedHome extends StatelessWidget {
     );
   }
 
-  // Home v2 chip section (HomeOffersChipsSection): chip tabs + an offer carousel.
-  Widget _chipSection() {
-    const chips = ['Flest inlösen', 'Trendar just nu', 'Nyheter'];
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SizedBox(
-        height: 36,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: chips.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (_, i) {
-            final sel = i == 0;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: sel ? primary.withValues(alpha: 0.18) : _surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: sel
-                        ? primary.withValues(alpha: 0.6)
-                        : const Color(0xFF2E3036)),
-              ),
-              child: Text(chips[i],
-                  style: TextStyle(
-                      color: sel ? primary : _surfaceSubtext,
-                      fontSize: 13,
-                      fontWeight: sel ? FontWeight.w700 : FontWeight.w500)),
-            );
-          },
-        ),
-      ),
-      const SizedBox(height: 12),
-      SizedBox(
-        height: 150,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: 4,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (_, i) => _offerCard(['25%', '15%', '30%', '20%'][i],
-              ['Stadium', 'ICA Maxi', 'Pizza Hut', 'Apotek'][i]),
-        ),
-      ),
-    ]);
-  }
-
-  Widget _offerCard(String pct, String name) => Container(
-        width: 130,
-        decoration: BoxDecoration(
-            color: _surface, borderRadius: BorderRadius.circular(16)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Stack(children: [
-            Container(
-              height: 90,
-              decoration: const BoxDecoration(
-                  color: Color(0xFF2A2C33),
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(16))),
-              child:
-                  const Center(child: Icon(Icons.image, color: Color(0xFF3A3C44))),
-            ),
-            Positioned(
-              top: 8,
-              left: 8,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                    color: primary, borderRadius: BorderRadius.circular(8)),
-                child: Text(pct,
-                    style: TextStyle(
-                        color: _onColor(primary),
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12)),
-              ),
-            ),
-          ]),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name,
-                  style: const TextStyle(
-                      color: _surfaceText,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              const Text('1,5 km',
-                  style: TextStyle(color: _surfaceSubtext, fontSize: 11.5)),
-            ]),
-          ),
-        ]),
-      );
-
-  Widget _stottaCard(Color onPrimary) => Padding(
+  // Stötta din förening (UserSupportSellerWidget) — dark themed.
+  Widget _stottaCard(Color onP) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
               color: _surface, borderRadius: BorderRadius.circular(20)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
+              // navy crest badge with the club logo
               Container(
-                width: 56,
-                height: 56,
+                width: 64,
+                height: 64,
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14)),
-                clipBehavior: Clip.antiAlias,
-                alignment: Alignment.center,
-                child: (logoUrl != null && logoUrl!.isNotEmpty)
-                    ? Image.network(logoUrl!,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                            Icons.shield_outlined, color: Color(0xFF8A94A6)))
-                    : const Icon(Icons.shield_outlined,
-                        color: Color(0xFF8A94A6)),
+                    color: const Color(0xFF101826),
+                    borderRadius: BorderRadius.circular(16)),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: (logoUrl != null && logoUrl!.isNotEmpty)
+                      ? Image.network(logoUrl!,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(
+                              Icons.shield_outlined, color: Colors.white))
+                      : const Icon(Icons.shield_outlined, color: Colors.white),
+                ),
               ),
               const SizedBox(width: 13),
               Expanded(
-                child:
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Stötta $name',
-                      style: const TextStyle(
-                          color: _surfaceText,
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 2),
-                  Text(city == null || city!.isEmpty ? 'Allsvenskan' : city!,
-                      style:
-                          const TextStyle(color: _surfaceSubtext, fontSize: 13)),
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Stötta $name',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: _surfaceText,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text(city == null || city!.isEmpty ? 'Allsvenskan' : city!,
+                          style: const TextStyle(
+                              color: _surfaceSub, fontSize: 13)),
+                    ]),
               ),
-              const Icon(Icons.chevron_right, color: _surfaceSubtext),
+              const Icon(Icons.chevron_right, color: _surfaceSub, size: 22),
             ]),
-            const SizedBox(height: 16),
-            const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('62% av målet sålt',
+            const SizedBox(height: 14),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              const Text('62% av mål',
                   style: TextStyle(
                       color: _surfaceText,
                       fontSize: 13.5,
-                      fontWeight: FontWeight.w600)),
-              Text('Sålda 62/100',
-                  style: TextStyle(color: _surfaceSubtext, fontSize: 13)),
+                      fontWeight: FontWeight.w700)),
+              Row(children: [
+                const Text('Sålda ',
+                    style: TextStyle(
+                        color: _surfaceSub,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500)),
+                Text('62',
+                    style: TextStyle(
+                        color: primary,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700)),
+                const Text('/100',
+                    style: TextStyle(color: _surfaceSub, fontSize: 12.5)),
+              ]),
             ]),
-            const SizedBox(height: 8),
+            const SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(5),
               child: Stack(children: [
@@ -434,96 +521,122 @@ class _ThemedHome extends StatelessWidget {
                     child: Container(height: 9, color: primary)),
               ]),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 9),
             Row(children: [
               const Expanded(
                 child: Text('38 köp kvar till milstolpe',
-                    style: TextStyle(color: _surfaceSubtext, fontSize: 12.5)),
+                    style: TextStyle(
+                        color: _surfaceSub, fontSize: 12.5, height: 1.2)),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                     color: primary, borderRadius: BorderRadius.circular(24)),
                 child: Text('Köp nu',
                     style: TextStyle(
-                        color: onPrimary, fontWeight: FontWeight.w700)),
+                        color: onP, fontWeight: FontWeight.w700, fontSize: 15)),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: const Color(0xFF80868F))),
                 child: const Text('Dela',
                     style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w700)),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15)),
               ),
             ]),
           ]),
         ),
       );
 
+  // Ludde card (navy gradient + input + send) — unchanged by the theme, as in app.
   Widget _luddeCard() => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              color: const Color(0xFF1E2024),
-              borderRadius: BorderRadius.circular(18)),
-          child: Row(children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.18),
-                  shape: BoxShape.circle),
-              child: Icon(Icons.smart_toy_outlined, color: primary, size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Chatta med Ludde',
-                        style: TextStyle(
-                            color: _surfaceText,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.5)),
-                    SizedBox(height: 2),
-                    Text('Din AI-assistent som hjälper dig spara mer.',
-                        style:
-                            TextStyle(color: _surfaceSubtext, fontSize: 12)),
-                  ]),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: primary)),
-              child: Text('Chatta',
-                  style: TextStyle(
-                      color: primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12.5)),
-            ),
+            gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2A60AB), Color(0xFF112E58)]),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(children: [
+            Row(children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                    color: Color(0xFF1B3A66), shape: BoxShape.circle),
+                child: const Icon(Icons.smart_toy_rounded,
+                    color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Fråga Ludde',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15.5)),
+                      SizedBox(height: 2),
+                      Text('Chatboten från Klubbrabatten',
+                          style: TextStyle(
+                              color: Color(0xB8FFFFFF), fontSize: 12)),
+                    ]),
+              ),
+              const Icon(Icons.auto_awesome, color: Color(0xFFF7B27A), size: 20),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  alignment: Alignment.centerLeft,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(24),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                  ),
+                  child: const Text('Ställ en fråga...',
+                      style: TextStyle(color: Color(0x8CFFFFFF), fontSize: 14)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                    color: Colors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.send_rounded,
+                    color: Color(0xFF13315F), size: 20),
+              ),
+            ]),
           ]),
         ),
       );
 
-  Widget _sectionHeader(String title) => Padding(
+  Widget _sectionTitle(String t) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(title,
+          Text(t,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700)),
+                  color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
           const Text('Visa alla',
-              style: TextStyle(color: Color(0xFF9EA8B7), fontSize: 13)),
+              style: TextStyle(color: _surfaceSub, fontSize: 13)),
         ]),
       );
 
@@ -557,8 +670,8 @@ class _ThemedHome extends StatelessWidget {
                               fontSize: 14)),
                       SizedBox(height: 4),
                       Text('En ny aktör har lagts till i Uppsala.',
-                          style: TextStyle(
-                              color: Color(0xFF9EA8B7), fontSize: 12)),
+                          style:
+                              TextStyle(color: _surfaceSub, fontSize: 12)),
                     ]),
               ),
             ),
@@ -593,8 +706,7 @@ class _ThemedHome extends StatelessWidget {
                   style: TextStyle(
                       color: i == 0 ? primary : const Color(0xFFA3ABB8),
                       fontSize: 11,
-                      fontWeight:
-                          i == 0 ? FontWeight.w700 : FontWeight.w500)),
+                      fontWeight: i == 0 ? FontWeight.w700 : FontWeight.w500)),
             ]),
         ],
       ),
