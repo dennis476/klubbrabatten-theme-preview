@@ -2,10 +2,11 @@
 // Embedded by the admin (Lovable) via an <iframe>; the accent colour + logo +
 // name come from the URL query string:
 //   ?primary=%23F2C200&logo=<logo-url>&name=Vaksala%20SK&city=Solna
-// Mirrors the real themed home (home_page.dart / home_header.dart /
-// category_rail.dart / section_header.dart / the Stötta card) — same dark base
-// + token logic — so it is pixel-faithful.
+// Faithful replica of the real Home v2 (home_page_content order: chip sections
+// → Stötta-kort → Ludde-kort → Nyheter), using the SAME assets (KLUBBRABATTEN
+// logo, 3D-brevlåda, 3D category icons, nav SVGs) + the same dark theme tokens.
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() => runApp(const ClubThemePreviewApp());
 
@@ -108,14 +109,12 @@ class _ThemedHome extends StatelessWidget {
           ],
           stops: const [0.0, 0.26, 1.0],
         ),
-        // Club crest as a large, faint background watermark — upper, slightly
-        // right-of-centre (matches home_page.dart). NetworkImage at scale 1.0
-        // keeps the full-resolution logo crisp; alignment positive-x because the
-        // crest is centred in its canvas.
+        // Club crest as a large, faint, full-resolution background watermark
+        // (upper, slightly right-of-centre). Matches home_page.dart.
         image: (logoUrl != null && logoUrl!.isNotEmpty)
             ? DecorationImage(
                 image: NetworkImage(logoUrl!),
-                alignment: const Alignment(0.55, -0.6),
+                alignment: const Alignment(0.55, -0.62),
                 scale: 1.55,
                 fit: BoxFit.none,
                 opacity: 0.15,
@@ -136,19 +135,19 @@ class _ThemedHome extends StatelessWidget {
             const SizedBox(height: 16),
             _categoryRail(),
             const SizedBox(height: 18),
+            _chipSection(),
+            const SizedBox(height: 18),
             _stottaCard(onPrimary),
+            const SizedBox(height: 14),
+            _luddeCard(),
             const SizedBox(height: 20),
             _sectionHeader('Nyheter'),
             const SizedBox(height: 8),
             _newsCard(),
-            const SizedBox(height: 14),
-            _sectionHeader('Utvalda erbjudanden'),
-            const SizedBox(height: 8),
-            _offerRow(),
             const SizedBox(height: 24),
           ]),
         ),
-        _navBar(onPrimary),
+        _navBar(),
       ]),
     );
   }
@@ -174,39 +173,22 @@ class _ThemedHome extends StatelessWidget {
   Widget _header() => Padding(
         padding: const EdgeInsets.fromLTRB(22, 0, 20, 0),
         child: Row(children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-                color: _orange, borderRadius: BorderRadius.circular(8)),
-            alignment: Alignment.center,
-            child: const Text('K',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18)),
-          ),
-          const SizedBox(width: 8),
-          const Text('KLUBB',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  letterSpacing: 0.3)),
-          const Text('RABATTEN',
-              style: TextStyle(
-                  color: _orange,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  letterSpacing: 0.3)),
+          // Real KLUBBRABATTEN logo (white-on-dark variant).
+          Image.asset('assets/brand/header_logo_dark.webp',
+              height: 30, fit: BoxFit.contain, alignment: Alignment.centerLeft),
           const Spacer(),
+          // Real 3D mailbox notification button (glass circle).
           Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-                color: Color(0xFF24262C), shape: BoxShape.circle),
-            child: const Icon(Icons.notifications_none_rounded,
-                color: Colors.white, size: 22),
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFF24262C),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            padding: const EdgeInsets.all(7),
+            child: Image.asset('assets/ic_notification_3d.png',
+                fit: BoxFit.contain),
           ),
         ]),
       );
@@ -243,8 +225,7 @@ class _ThemedHome extends StatelessWidget {
       );
 
   Widget _categoryRail() {
-    // Real categories + order (DB `categories` sort_order) with the actual 3D
-    // Wolt icons (assets/categories_icon_3d), "Alla" first — matches the app.
+    // Real categories + order (DB sort_order) with the actual 3D Wolt icons.
     const cats = <List<String>>[
       ['Alla', 'alla'],
       ['Livsmedel', 'livsmedel'],
@@ -297,6 +278,100 @@ class _ThemedHome extends StatelessWidget {
       ),
     );
   }
+
+  // Home v2 chip section (HomeOffersChipsSection): chip tabs + an offer carousel.
+  Widget _chipSection() {
+    const chips = ['Flest inlösen', 'Trendar just nu', 'Nyheter'];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(
+        height: 36,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: chips.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (_, i) {
+            final sel = i == 0;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: sel ? primary.withValues(alpha: 0.18) : _surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: sel
+                        ? primary.withValues(alpha: 0.6)
+                        : const Color(0xFF2E3036)),
+              ),
+              child: Text(chips[i],
+                  style: TextStyle(
+                      color: sel ? primary : _surfaceSubtext,
+                      fontSize: 13,
+                      fontWeight: sel ? FontWeight.w700 : FontWeight.w500)),
+            );
+          },
+        ),
+      ),
+      const SizedBox(height: 12),
+      SizedBox(
+        height: 150,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: 4,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (_, i) => _offerCard(['25%', '15%', '30%', '20%'][i],
+              ['Stadium', 'ICA Maxi', 'Pizza Hut', 'Apotek'][i]),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _offerCard(String pct, String name) => Container(
+        width: 130,
+        decoration: BoxDecoration(
+            color: _surface, borderRadius: BorderRadius.circular(16)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Stack(children: [
+            Container(
+              height: 90,
+              decoration: const BoxDecoration(
+                  color: Color(0xFF2A2C33),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(16))),
+              child:
+                  const Center(child: Icon(Icons.image, color: Color(0xFF3A3C44))),
+            ),
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                    color: primary, borderRadius: BorderRadius.circular(8)),
+                child: Text(pct,
+                    style: TextStyle(
+                        color: _onColor(primary),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12)),
+              ),
+            ),
+          ]),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(name,
+                  style: const TextStyle(
+                      color: _surfaceText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              const Text('1,5 km',
+                  style: TextStyle(color: _surfaceSubtext, fontSize: 11.5)),
+            ]),
+          ),
+        ]),
+      );
 
   Widget _stottaCard(Color onPrimary) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -390,6 +465,55 @@ class _ThemedHome extends StatelessWidget {
         ),
       );
 
+  Widget _luddeCard() => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+              color: const Color(0xFF1E2024),
+              borderRadius: BorderRadius.circular(18)),
+          child: Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.18),
+                  shape: BoxShape.circle),
+              child: Icon(Icons.smart_toy_outlined, color: primary, size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Chatta med Ludde',
+                        style: TextStyle(
+                            color: _surfaceText,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5)),
+                    SizedBox(height: 2),
+                    Text('Din AI-assistent som hjälper dig spara mer.',
+                        style:
+                            TextStyle(color: _surfaceSubtext, fontSize: 12)),
+                  ]),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: primary)),
+              child: Text('Chatta',
+                  style: TextStyle(
+                      color: primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.5)),
+            ),
+          ]),
+        ),
+      );
+
   Widget _sectionHeader(String title) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -442,43 +566,30 @@ class _ThemedHome extends StatelessWidget {
         ),
       );
 
-  Widget _offerRow() => SizedBox(
-        height: 120,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: 4,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (_, i) => Container(
-            width: 104,
-            decoration: BoxDecoration(
-                color: _surface, borderRadius: BorderRadius.circular(14)),
-            child:
-                const Center(child: Icon(Icons.image, color: Color(0xFF3A3C44))),
-          ),
-        ),
-      );
-
-  Widget _navBar(Color onPrimary) {
+  Widget _navBar() {
     const items = [
-      ['Hem', Icons.home_rounded],
-      ['Favoriter', Icons.favorite_border],
-      ['Karta', Icons.map_outlined],
-      ['Community', Icons.groups_outlined],
-      ['Profil', Icons.person_outline],
+      ['Hem', 'assets/nav/nav_tab_home.svg'],
+      ['Favoriter', 'assets/nav/nav_tab_favorite.svg'],
+      ['Karta', 'assets/nav/nav_tab_map.svg'],
+      ['Community', 'assets/nav/nav_tab_community.svg'],
+      ['Profil', 'assets/nav/nav_tab_profile.svg'],
     ];
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 18),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 18),
       decoration: const BoxDecoration(color: Color(0xFF16171B)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           for (var i = 0; i < items.length; i++)
             Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(items[i][1] as IconData,
-                  color: i == 0 ? primary : const Color(0xFFA3ABB8), size: 24),
+              SvgPicture.asset(items[i][1],
+                  width: 24,
+                  height: 24,
+                  colorFilter: ColorFilter.mode(
+                      i == 0 ? primary : const Color(0xFFA3ABB8),
+                      BlendMode.srcIn)),
               const SizedBox(height: 4),
-              Text(items[i][0] as String,
+              Text(items[i][0],
                   style: TextStyle(
                       color: i == 0 ? primary : const Color(0xFFA3ABB8),
                       fontSize: 11,
