@@ -15,6 +15,8 @@ void main() => runApp(const ClubThemePreviewApp());
 const Color _ink = Color(0xFF14294A);
 const Color _muted = Color(0xFF8A94A6);
 const Color _navy = Color(0xFF03234E);
+// Accents stay the app's orange — ONLY the background (wash + crest) is themed.
+const Color _orange = Color(0xFFF27B36);
 const String _font = 'DM Sans';
 
 Color _parseHex(String? hex) {
@@ -141,24 +143,24 @@ class _Home extends StatelessWidget {
   }
 
   Widget _crest() => Positioned(
-        top: -34,
-        right: -46,
+        top: 6,
+        right: 14,
         child: IgnorePointer(
           child: SizedBox(
-            width: 230,
-            height: 230,
+            width: 128,
+            height: 128,
             child: Stack(children: [
-              // Vivid crest (stronger colours than a faint watermark).
+              // Vivid crest — smaller + fully visible in the upper-right so it
+              // reads as the club's emblem.
               Opacity(
-                opacity: 0.62,
+                opacity: 0.72,
                 child: Image.network(logoUrl!,
-                    width: 230,
-                    height: 230,
+                    width: 128,
+                    height: 128,
                     fit: BoxFit.contain,
-                    cacheWidth: 460),
+                    cacheWidth: 320),
               ),
-              // Glass sheen: a white highlight in the logo's own shape, like
-              // light catching glass (top-left → transparent).
+              // Glass sheen: a white highlight in the logo's own shape.
               Opacity(
                 opacity: 0.5,
                 child: ShaderMask(
@@ -170,10 +172,10 @@ class _Home extends StatelessWidget {
                     stops: [0.0, 0.5],
                   ).createShader(r),
                   child: Image.network(logoUrl!,
-                      width: 230,
-                      height: 230,
+                      width: 128,
+                      height: 128,
                       fit: BoxFit.contain,
-                      cacheWidth: 460),
+                      cacheWidth: 320),
                 ),
               ),
             ]),
@@ -282,17 +284,23 @@ class _Home extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.fromLTRB(14, 9, 16, 9),
               decoration: BoxDecoration(
-                color: sel ? primary.withValues(alpha: 0.12) : Colors.white,
+                color: sel ? null : Colors.white,
+                gradient: sel
+                    ? const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFFFDEEE1), Color(0xFFFBDDC6)])
+                    : null,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                     color: sel
-                        ? primary.withValues(alpha: 0.40)
+                        ? const Color(0x38F27B36)
                         : const Color(0x0F03234E)),
               ),
               alignment: Alignment.center,
               child: Text(pills[i],
                   style: TextStyle(
-                      color: sel ? primary : _navy,
+                      color: sel ? _orange : _navy,
                       fontSize: 13,
                       fontWeight: FontWeight.w700)),
             );
@@ -309,8 +317,8 @@ class _Home extends StatelessWidget {
           Row(children: [
             Text('Visa alla',
                 style: TextStyle(
-                    color: primary, fontSize: 13, fontWeight: FontWeight.w600)),
-            Icon(Icons.chevron_right_rounded, color: primary, size: 18),
+                    color: _orange, fontSize: 13, fontWeight: FontWeight.w600)),
+            Icon(Icons.chevron_right_rounded, color: _orange, size: 18),
           ]),
         ]),
       ),
@@ -460,12 +468,12 @@ class _Home extends StatelessWidget {
                   color: const Color(0xFFEDF1F6),
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: sel ? primary : const Color(0x0F14294A),
+                      color: sel ? _orange : const Color(0x0F14294A),
                       width: sel ? 2 : 1),
                   boxShadow: sel
                       ? [
                           BoxShadow(
-                              color: primary.withValues(alpha: 0.30),
+                              color: _orange.withValues(alpha: 0.30),
                               blurRadius: 14,
                               offset: const Offset(0, 4))
                         ]
@@ -481,7 +489,7 @@ class _Home extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
-                      color: sel ? primary : _ink)),
+                      color: sel ? _orange : _ink)),
             ]),
           );
         },
@@ -547,7 +555,7 @@ class _Home extends StatelessWidget {
                         fontWeight: FontWeight.w500)),
                 Text('62',
                     style: TextStyle(
-                        color: primary,
+                        color: _orange,
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700)),
                 const Text('/100',
@@ -561,7 +569,7 @@ class _Home extends StatelessWidget {
                 Container(height: 9, color: Colors.white),
                 FractionallySizedBox(
                     widthFactor: 0.62,
-                    child: Container(height: 9, color: primary)),
+                    child: Container(height: 9, color: _orange)),
               ]),
             ),
             const SizedBox(height: 9),
@@ -576,10 +584,14 @@ class _Home extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 22),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                    color: primary, borderRadius: BorderRadius.circular(24)),
-                child: Text('Köp nu',
+                    gradient: const LinearGradient(
+                        colors: [Color(0xFFF89A4A), Color(0xFFEE6A18)]),
+                    borderRadius: BorderRadius.circular(24)),
+                child: const Text('Köp nu',
                     style: TextStyle(
-                        color: onP, fontWeight: FontWeight.w700, fontSize: 15)),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15)),
               ),
               const SizedBox(width: 8),
               Container(
@@ -680,8 +692,8 @@ class _Home extends StatelessWidget {
           Row(children: [
             Text('Visa alla',
                 style: TextStyle(
-                    color: primary, fontSize: 13, fontWeight: FontWeight.w600)),
-            Icon(Icons.chevron_right_rounded, color: primary, size: 18),
+                    color: _orange, fontSize: 13, fontWeight: FontWeight.w600)),
+            Icon(Icons.chevron_right_rounded, color: _orange, size: 18),
           ]),
         ]),
       );
@@ -752,12 +764,12 @@ class _Home extends StatelessWidget {
                   width: 24,
                   height: 24,
                   colorFilter: ColorFilter.mode(
-                      i == 0 ? primary : const Color(0xFF0E3D78),
+                      i == 0 ? _orange : const Color(0xFF0E3D78),
                       BlendMode.srcIn)),
               const SizedBox(height: 4),
               Text(items[i][0],
                   style: TextStyle(
-                      color: i == 0 ? primary : const Color(0xCC0E3D78),
+                      color: i == 0 ? _orange : const Color(0xCC0E3D78),
                       fontSize: 11,
                       fontWeight: i == 0 ? FontWeight.w700 : FontWeight.w500)),
             ]),
