@@ -108,14 +108,17 @@ class _ThemedHome extends StatelessWidget {
           ],
           stops: const [0.0, 0.26, 1.0],
         ),
-        // Club crest as a faint background watermark (matches home_page.dart).
+        // Club crest as a large, faint background watermark — upper, slightly
+        // right-of-centre (matches home_page.dart). NetworkImage at scale 1.0
+        // keeps the full-resolution logo crisp; alignment positive-x because the
+        // crest is centred in its canvas.
         image: (logoUrl != null && logoUrl!.isNotEmpty)
             ? DecorationImage(
                 image: NetworkImage(logoUrl!),
-                alignment: const Alignment(1.15, -0.82),
-                scale: 1.7,
+                alignment: const Alignment(0.55, -0.6),
+                scale: 1.55,
                 fit: BoxFit.none,
-                opacity: 0.16,
+                opacity: 0.15,
               )
             : null,
       ),
@@ -240,40 +243,47 @@ class _ThemedHome extends StatelessWidget {
       );
 
   Widget _categoryRail() {
-    const labels = ['Alla', 'Livsmedel', 'Restaurang', 'Sport & Fritid', 'Mode', 'Hem'];
-    const icons = [
-      Icons.grid_view_rounded,
-      Icons.shopping_basket_outlined,
-      Icons.restaurant,
-      Icons.sports_soccer,
-      Icons.checkroom,
-      Icons.chair_outlined
+    // Real categories + order (DB `categories` sort_order) with the actual 3D
+    // Wolt icons (assets/categories_icon_3d), "Alla" first — matches the app.
+    const cats = <List<String>>[
+      ['Alla', 'alla'],
+      ['Livsmedel', 'livsmedel'],
+      ['Restaurang & Café', 'restaurang-cafe'],
+      ['Sport & Fritid', 'sport-fritid'],
+      ['Fordon', 'fordon'],
+      ['Mode', 'mode'],
+      ['Hem & Elektronik', 'hem-elektronik'],
+      ['Hälsa & Skönhet', 'halsa-skonhet'],
+      ['Aktiviteter', 'aktiviteter'],
+      ['Onlinerabatter', 'onlinerabatter'],
     ];
     return SizedBox(
-      height: 92,
+      height: 96,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: labels.length,
+        itemCount: cats.length,
         separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (_, i) {
           final selected = i == 0;
           return SizedBox(
-            width: 60,
+            width: 62,
             child: Column(children: [
               Container(
                 width: 56,
                 height: 56,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: const Color(0xFFEDF1F6),
                   shape: BoxShape.circle,
                   border: Border.all(
                       color: selected ? _orange : Colors.transparent, width: 2),
                 ),
-                child: Icon(icons[i], color: const Color(0xFF14294A), size: 26),
+                child: Image.asset('assets/cat/${cats[i][1]}.webp',
+                    width: 40, height: 40),
               ),
               const SizedBox(height: 7),
-              Text(labels[i],
+              Text(cats[i][0],
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
