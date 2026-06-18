@@ -105,17 +105,10 @@ class _Home extends StatelessWidget {
           ],
           stops: const [0.0, 0.26, 0.6],
         ),
-        // Crest watermark bleeding off the top-right, decoded high-res.
-        image: (logoUrl != null && logoUrl!.isNotEmpty)
-            ? DecorationImage(
-                image: ResizeImage(NetworkImage(logoUrl!), width: 640),
-                alignment: const Alignment(1.32, -1.04),
-                scale: 0.78,
-                fit: BoxFit.none,
-                opacity: 0.12)
-            : null,
       ),
-      child: Column(children: [
+      child: Stack(fit: StackFit.expand, children: [
+        if (logoUrl != null && logoUrl!.isNotEmpty) _crest(),
+        Column(children: [
         Expanded(
           child: ListView(padding: EdgeInsets.zero, children: [
             const SizedBox(height: 14),
@@ -142,9 +135,51 @@ class _Home extends StatelessWidget {
           ]),
         ),
         _navBar(onP),
+        ]),
       ]),
     );
   }
+
+  Widget _crest() => Positioned(
+        top: -34,
+        right: -46,
+        child: IgnorePointer(
+          child: SizedBox(
+            width: 230,
+            height: 230,
+            child: Stack(children: [
+              // Vivid crest (stronger colours than a faint watermark).
+              Opacity(
+                opacity: 0.62,
+                child: Image.network(logoUrl!,
+                    width: 230,
+                    height: 230,
+                    fit: BoxFit.contain,
+                    cacheWidth: 460),
+              ),
+              // Glass sheen: a white highlight in the logo's own shape, like
+              // light catching glass (top-left → transparent).
+              Opacity(
+                opacity: 0.5,
+                child: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (r) => const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.white, Colors.transparent],
+                    stops: [0.0, 0.5],
+                  ).createShader(r),
+                  child: Image.network(logoUrl!,
+                      width: 230,
+                      height: 230,
+                      fit: BoxFit.contain,
+                      cacheWidth: 460),
+                ),
+              ),
+            ]),
+          ),
+        ),
+      );
 
   Widget _statusBar() => const Padding(
         padding: EdgeInsets.symmetric(horizontal: 22),
