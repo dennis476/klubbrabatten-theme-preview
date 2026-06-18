@@ -3,24 +3,18 @@
 // name come from the URL query string:
 //   ?primary=%23F2C200&logo=<logo-url>&name=Vaksala%20SK&city=Solna
 //
-// Faithful replica of the REAL Home v2 (verified against home_page.dart /
-// home_page_content.dart / home_offers_chips_section.dart / chip_offer_card.dart
-// / user_support_seller_widget.dart / ludde_card.dart), rendered in the dark
-// föreningstema. Real order: HomeHeader → search → CHIP SECTION (pill selector +
-// VERTICAL list of 4 offer rows) → category rail → Stötta-kort → Ludde-kort →
-// Nyheter. Same dark tokens + assets as the app.
+// LIGHT-branded look (matches the app as of 2026-06-18): the normal light Home
+// v2, re-tinted in the club's colour — soft wash + crest watermark (top-right)
+// + the club accent on chips / category / Stötta / nav. Mirrors home_page.dart
+// + the home widgets.
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 void main() => runApp(const ClubThemePreviewApp());
 
-// ── Dark base tokens (match lib/globals/club_theme.dart) ─────────────────────
-const Color _bgTop = Color(0xFF15161A);
-const Color _bgBottom = Color(0xFF0D0E11);
-const Color _surface = Color(0xFF1C1D21);
-const Color _surfaceText = Color(0xFFFFFFFF);
-const Color _surfaceSub = Color(0xFF9EA8B7);
-const Color _orange = Color(0xFFF27B36);
+const Color _ink = Color(0xFF14294A);
+const Color _muted = Color(0xFF8A94A6);
+const Color _navy = Color(0xFF03234E);
 const String _font = 'DM Sans';
 
 Color _parseHex(String? hex) {
@@ -99,23 +93,26 @@ class _Home extends StatelessWidget {
     final onP = _onColor(primary);
     return DecoratedBox(
       decoration: BoxDecoration(
+        // Soft club-colour wash at the top → normal cool near-white body.
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color.alphaBlend(primary.withValues(alpha: 0.22), _bgTop),
-            _bgTop,
-            _bgBottom,
+            Color.alphaBlend(
+                primary.withValues(alpha: 0.16), const Color(0xFFFBFCFE)),
+            const Color(0xFFFBFCFE),
+            const Color(0xFFF2F4F8),
           ],
-          stops: const [0.0, 0.26, 1.0],
+          stops: const [0.0, 0.26, 0.6],
         ),
+        // Crest watermark bleeding off the top-right, decoded high-res.
         image: (logoUrl != null && logoUrl!.isNotEmpty)
             ? DecorationImage(
-                image: NetworkImage(logoUrl!),
-                alignment: const Alignment(0.55, -0.62),
-                scale: 1.55,
+                image: ResizeImage(NetworkImage(logoUrl!), width: 640),
+                alignment: const Alignment(1.32, -1.04),
+                scale: 0.78,
                 fit: BoxFit.none,
-                opacity: 0.15)
+                opacity: 0.12)
             : null,
       ),
       child: Column(children: [
@@ -144,7 +141,7 @@ class _Home extends StatelessWidget {
             const SizedBox(height: 24),
           ]),
         ),
-        _navBar(),
+        _navBar(onP),
       ]),
     );
   }
@@ -154,31 +151,36 @@ class _Home extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text('09:41',
               style: TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+                  color: _ink, fontWeight: FontWeight.w600, fontSize: 15)),
           Row(children: [
-            Icon(Icons.signal_cellular_alt, color: Colors.white, size: 16),
+            Icon(Icons.signal_cellular_alt, color: _ink, size: 16),
             SizedBox(width: 5),
-            Icon(Icons.wifi, color: Colors.white, size: 16),
+            Icon(Icons.wifi, color: _ink, size: 16),
             SizedBox(width: 5),
-            Icon(Icons.battery_full, color: Colors.white, size: 18),
+            Icon(Icons.battery_full, color: _ink, size: 18),
           ]),
         ]),
       );
 
-  // HomeHeader top row: logo (h34) + 48px glass notification (3D mailbox).
   Widget _headerRow() => Padding(
         padding: const EdgeInsets.fromLTRB(22, 0, 20, 0),
         child: Row(children: [
-          Image.asset('assets/brand/header_logo_dark.webp',
+          Image.asset('assets/brand/header_logo.webp',
               height: 34, fit: BoxFit.contain, alignment: Alignment.centerLeft),
           const Spacer(),
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.10),
+              color: Colors.white.withValues(alpha: 0.65),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+              boxShadow: [
+                BoxShadow(
+                    color: const Color(0xFF03234E).withValues(alpha: 0.10),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3)),
+              ],
             ),
             padding: const EdgeInsets.all(8),
             child: Image.asset('assets/ic_notification_3d.png', fit: BoxFit.contain),
@@ -189,14 +191,12 @@ class _Home extends StatelessWidget {
   Widget _locationRow() => const Padding(
         padding: EdgeInsets.fromLTRB(22, 0, 20, 0),
         child: Row(children: [
-          Icon(Icons.location_on, color: Color(0xFFC8CED8), size: 18),
+          Icon(Icons.location_on, color: _muted, size: 18),
           SizedBox(width: 6),
           Text('Solna • Inom 50 km',
               style: TextStyle(
-                  color: Color(0xFFC8CED8),
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w500)),
-          Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFC8CED8), size: 18),
+                  color: _muted, fontSize: 14.5, fontWeight: FontWeight.w500)),
+          Icon(Icons.keyboard_arrow_down_rounded, color: _muted, size: 18),
         ]),
       );
 
@@ -205,21 +205,27 @@ class _Home extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.circular(16)),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0x0D14294A)),
+            boxShadow: [
+              BoxShadow(
+                  color: const Color(0xFF14294A).withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  spreadRadius: -3,
+                  offset: const Offset(0, 4)),
+            ],
+          ),
           child: const Row(children: [
-            Icon(Icons.search, color: Color(0xFF8A94A6), size: 20),
+            Icon(Icons.search, color: _muted, size: 20),
             SizedBox(width: 12),
             Text('Sök affärer',
                 style: TextStyle(
-                    color: Color(0xFF8A94A6),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500)),
+                    color: _muted, fontSize: 15, fontWeight: FontWeight.w500)),
           ]),
         ),
       );
 
-  // CHIP SECTION: pill selector (Flest inlösen / Trendar just nu / Nyheter) +
-  // a VERTICAL list of 4 offer rows (chip_offer_card). Dark-themed.
   Widget _chipSection(Color onP) {
     const pills = ['Flest inlösen', 'Trendar just nu', 'Nyheter'];
     final offers = [
@@ -229,7 +235,6 @@ class _Home extends StatelessWidget {
       ['Apotek Hjärtat', 'Hälsa', '20%', '2,1 km', '511'],
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // pill bar
       SizedBox(
         height: 40,
         child: ListView.separated(
@@ -242,17 +247,17 @@ class _Home extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.fromLTRB(14, 9, 16, 9),
               decoration: BoxDecoration(
-                color: sel ? primary.withValues(alpha: 0.18) : _surface,
+                color: sel ? primary.withValues(alpha: 0.12) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                     color: sel
-                        ? primary.withValues(alpha: 0.55)
-                        : const Color(0xFF2E3036)),
+                        ? primary.withValues(alpha: 0.40)
+                        : const Color(0x0F03234E)),
               ),
               alignment: Alignment.center,
               child: Text(pills[i],
                   style: TextStyle(
-                      color: sel ? primary : _surfaceSub,
+                      color: sel ? primary : _navy,
                       fontSize: 13,
                       fontWeight: FontWeight.w700)),
             );
@@ -260,13 +265,12 @@ class _Home extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 12),
-      // section header
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           const Text('Flest inlösen',
               style: TextStyle(
-                  color: _surfaceText, fontSize: 17, fontWeight: FontWeight.w700)),
+                  color: _navy, fontSize: 17, fontWeight: FontWeight.w700)),
           Row(children: [
             Text('Visa alla',
                 style: TextStyle(
@@ -276,7 +280,6 @@ class _Home extends StatelessWidget {
         ]),
       ),
       const SizedBox(height: 10),
-      // VERTICAL list of 4 offer rows
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -286,18 +289,20 @@ class _Home extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                    color: _surface, borderRadius: BorderRadius.circular(18)),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFE9EDF2)),
+                ),
                 child: Row(children: [
-                  // image + discount badge
                   Stack(children: [
                     Container(
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                          color: const Color(0xFF2A2C33),
+                          color: const Color(0xFFEDF1F6),
                           borderRadius: BorderRadius.circular(14)),
                       child: const Icon(Icons.local_offer,
-                          color: Color(0xFF565963), size: 22),
+                          color: Color(0xFFB6BECB), size: 22),
                     ),
                     Positioned(
                       top: 4,
@@ -321,7 +326,6 @@ class _Home extends StatelessWidget {
                     ),
                   ]),
                   const SizedBox(width: 12),
-                  // name + title + meta
                   Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +334,7 @@ class _Home extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  color: _surfaceText,
+                                  color: _ink,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14)),
                           const SizedBox(height: 2),
@@ -338,32 +342,32 @@ class _Home extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  color: _surfaceSub,
+                                  color: _muted,
                                   fontWeight: FontWeight.w500,
                                   fontSize: 12.5)),
                           const SizedBox(height: 4),
                           Row(children: [
                             const Icon(Icons.location_on_rounded,
-                                size: 12, color: _surfaceSub),
+                                size: 12, color: _muted),
                             const SizedBox(width: 2),
                             Text(o[3],
                                 style: const TextStyle(
-                                    color: _surfaceSub,
+                                    color: _muted,
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w500)),
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.fromLTRB(5, 2, 8, 2),
                               decoration: BoxDecoration(
-                                  color: const Color(0xFF2A2D34),
+                                  color: const Color(0xFFEEF2F8),
                                   borderRadius: BorderRadius.circular(999)),
                               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                Icon(Icons.confirmation_number_outlined,
-                                    size: 12, color: _surfaceSub),
+                                const Icon(Icons.confirmation_number_outlined,
+                                    size: 12, color: _navy),
                                 const SizedBox(width: 4),
                                 Text(o[4],
                                     style: const TextStyle(
-                                        color: Color(0xFFD7DCE5),
+                                        color: _navy,
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w600)),
                               ]),
@@ -372,14 +376,13 @@ class _Home extends StatelessWidget {
                         ]),
                   ),
                   const SizedBox(width: 8),
-                  // favorite heart
                   Container(
                     width: 36,
                     height: 36,
                     decoration: const BoxDecoration(
-                        color: Color(0xFF26282F), shape: BoxShape.circle),
+                        color: Color(0xFFF4F6FA), shape: BoxShape.circle),
                     child: const Icon(Icons.favorite_border,
-                        size: 18, color: _surfaceSub),
+                        size: 18, color: _muted),
                   ),
                 ]),
               ),
@@ -422,7 +425,16 @@ class _Home extends StatelessWidget {
                   color: const Color(0xFFEDF1F6),
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: sel ? _orange : Colors.transparent, width: 2),
+                      color: sel ? primary : const Color(0x0F14294A),
+                      width: sel ? 2 : 1),
+                  boxShadow: sel
+                      ? [
+                          BoxShadow(
+                              color: primary.withValues(alpha: 0.30),
+                              blurRadius: 14,
+                              offset: const Offset(0, 4))
+                        ]
+                      : null,
                 ),
                 child: Image.asset('assets/cat/${cats[i][1]}.webp',
                     width: 40, height: 40),
@@ -434,7 +446,7 @@ class _Home extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
-                      color: sel ? _orange : const Color(0xFFC8CED8))),
+                      color: sel ? primary : _ink)),
             ]),
           );
         },
@@ -442,23 +454,21 @@ class _Home extends StatelessWidget {
     );
   }
 
-  // Stötta din förening (UserSupportSellerWidget) — dark themed.
   Widget _stottaCard(Color onP) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-              color: _surface, borderRadius: BorderRadius.circular(20)),
+              color: const Color(0xFFFDEDDE),
+              borderRadius: BorderRadius.circular(20)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              // navy crest badge with the club logo
               Container(
                 width: 64,
                 height: 64,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                    color: const Color(0xFF101826),
-                    borderRadius: BorderRadius.circular(16)),
+                    color: _navy, borderRadius: BorderRadius.circular(16)),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: (logoUrl != null && logoUrl!.isNotEmpty)
@@ -478,28 +488,26 @@ class _Home extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              color: _surfaceText,
+                              color: _navy,
                               fontSize: 17,
                               fontWeight: FontWeight.w700)),
                       const SizedBox(height: 2),
                       Text(city == null || city!.isEmpty ? 'Allsvenskan' : city!,
                           style: const TextStyle(
-                              color: _surfaceSub, fontSize: 13)),
+                              color: Color(0xFF6D84A3), fontSize: 13)),
                     ]),
               ),
-              const Icon(Icons.chevron_right, color: _surfaceSub, size: 22),
+              const Icon(Icons.chevron_right, color: Color(0xFF6D84A3), size: 22),
             ]),
             const SizedBox(height: 14),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               const Text('62% av mål',
                   style: TextStyle(
-                      color: _surfaceText,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700)),
+                      color: _navy, fontSize: 13.5, fontWeight: FontWeight.w700)),
               Row(children: [
                 const Text('Sålda ',
                     style: TextStyle(
-                        color: _surfaceSub,
+                        color: Color(0xFF6D84A3),
                         fontSize: 12.5,
                         fontWeight: FontWeight.w500)),
                 Text('62',
@@ -508,14 +516,14 @@ class _Home extends StatelessWidget {
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700)),
                 const Text('/100',
-                    style: TextStyle(color: _surfaceSub, fontSize: 12.5)),
+                    style: TextStyle(color: Color(0xFF6D84A3), fontSize: 12.5)),
               ]),
             ]),
             const SizedBox(height: 9),
             ClipRRect(
               borderRadius: BorderRadius.circular(5),
               child: Stack(children: [
-                Container(height: 9, color: const Color(0xFF33353C)),
+                Container(height: 9, color: Colors.white),
                 FractionallySizedBox(
                     widthFactor: 0.62,
                     child: Container(height: 9, color: primary)),
@@ -526,7 +534,7 @@ class _Home extends StatelessWidget {
               const Expanded(
                 child: Text('38 köp kvar till milstolpe',
                     style: TextStyle(
-                        color: _surfaceSub, fontSize: 12.5, height: 1.2)),
+                        color: Color(0xFF6D84A3), fontSize: 12.5, height: 1.2)),
               ),
               Container(
                 height: 48,
@@ -545,10 +553,10 @@ class _Home extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFF80868F))),
+                    border: Border.all(color: const Color(0x1A03234E))),
                 child: const Text('Dela',
                     style: TextStyle(
-                        color: Colors.white,
+                        color: _navy,
                         fontWeight: FontWeight.w700,
                         fontSize: 15)),
               ),
@@ -557,7 +565,6 @@ class _Home extends StatelessWidget {
         ),
       );
 
-  // Ludde card (navy gradient + input + send) — unchanged by the theme, as in app.
   Widget _luddeCard() => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
@@ -634,9 +641,13 @@ class _Home extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text(t,
               style: const TextStyle(
-                  color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-          const Text('Visa alla',
-              style: TextStyle(color: _surfaceSub, fontSize: 13)),
+                  color: _navy, fontSize: 18, fontWeight: FontWeight.w700)),
+          Row(children: [
+            Text('Visa alla',
+                style: TextStyle(
+                    color: primary, fontSize: 13, fontWeight: FontWeight.w600)),
+            Icon(Icons.chevron_right_rounded, color: primary, size: 18),
+          ]),
         ]),
       );
 
@@ -645,16 +656,19 @@ class _Home extends StatelessWidget {
         child: Container(
           height: 96,
           decoration: BoxDecoration(
-              color: _surface, borderRadius: BorderRadius.circular(16)),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE9EDF2)),
+          ),
           child: Row(children: [
             Container(
               width: 96,
               height: 96,
               decoration: const BoxDecoration(
-                  color: Color(0xFF2A2C33),
+                  color: Color(0xFFEDF1F6),
                   borderRadius:
                       BorderRadius.horizontal(left: Radius.circular(16))),
-              child: const Icon(Icons.local_pizza, color: Color(0xFF6B7280)),
+              child: const Icon(Icons.local_pizza, color: Color(0xFFB6BECB)),
             ),
             const Expanded(
               child: Padding(
@@ -665,13 +679,12 @@ class _Home extends StatelessWidget {
                     children: [
                       Text('Ny aktör: Pizza Hut Uppsala',
                           style: TextStyle(
-                              color: Colors.white,
+                              color: _ink,
                               fontWeight: FontWeight.w700,
                               fontSize: 14)),
                       SizedBox(height: 4),
                       Text('En ny aktör har lagts till i Uppsala.',
-                          style:
-                              TextStyle(color: _surfaceSub, fontSize: 12)),
+                          style: TextStyle(color: _muted, fontSize: 12)),
                     ]),
               ),
             ),
@@ -679,7 +692,7 @@ class _Home extends StatelessWidget {
         ),
       );
 
-  Widget _navBar() {
+  Widget _navBar(Color onP) {
     const items = [
       ['Hem', 'assets/nav/nav_tab_home.svg'],
       ['Favoriter', 'assets/nav/nav_tab_favorite.svg'],
@@ -689,7 +702,12 @@ class _Home extends StatelessWidget {
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 18),
-      decoration: const BoxDecoration(color: Color(0xFF16171B)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+            top: BorderSide(
+                color: const Color(0xFF14294A).withValues(alpha: 0.06))),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -699,12 +717,12 @@ class _Home extends StatelessWidget {
                   width: 24,
                   height: 24,
                   colorFilter: ColorFilter.mode(
-                      i == 0 ? primary : const Color(0xFFA3ABB8),
+                      i == 0 ? primary : const Color(0xFF0E3D78),
                       BlendMode.srcIn)),
               const SizedBox(height: 4),
               Text(items[i][0],
                   style: TextStyle(
-                      color: i == 0 ? primary : const Color(0xFFA3ABB8),
+                      color: i == 0 ? primary : const Color(0xCC0E3D78),
                       fontSize: 11,
                       fontWeight: i == 0 ? FontWeight.w700 : FontWeight.w500)),
             ]),
